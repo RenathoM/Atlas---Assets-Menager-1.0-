@@ -64,8 +64,24 @@ app.post('/upload', async (req, res) => {
     // ensure output directory exists and save the generated .rbxm locally
     const outDir = process.env.OUT_DIR || path.join(process.cwd(), 'out');
     try { fs.mkdirSync(outDir, { recursive: true }); } catch (e) { /* ignore */ }
-    const name = payload.name || (payload.properties && payload.properties.Name) || 'Model';
-    const filename = `${Date.now()}-${name.replace(/\s+/g, '_')}.rbxm`;
+    const requestedName = payload.name || (payload.properties && payload.properties.Name) || 'Model';
+    const name = requestedName; // keep compatibility with older references
+    // if we downloaded a base asset, try to extract its internal Name to use as filename
+    let downloadedName = null;
+    try {
+      const m = rbxmXml.match(/<string\s+name="Name">([^<]+)<\/string>/i);
+      if (m && m[1]) downloadedName = m[1].trim();
+    } catch (e) { /* ignore */ }
+
+    let filename;
+    const ts = Date.now();
+    if (payload.baseAssetId && downloadedName) {
+      // use the downloaded asset's name as prefix and keep a suffix indicating target name
+      const suffix = requestedName || 'Model';
+      filename = `${downloadedName.replace(/\s+/g, '_')}-${suffix.replace(/\s+/g, '_')}-${ts}.rbxm`;
+    } else {
+      filename = `${ts}-${requestedName.replace(/\s+/g, '_')}.rbxm`;
+    }
     const filepath = path.join(outDir, filename);
     fs.writeFileSync(filepath, rbxmXml, 'utf8');
 
@@ -77,9 +93,11 @@ app.post('/upload', async (req, res) => {
 
     const form = new FormData();
     const assetType = process.env.ASSET_TYPE || String(payload.assetType || '13');
-    form.append('file', buffer, { filename: `${name}.rbxm`, contentType: 'application/xml' });
+    const fileBaseName = path.basename(filename, '.rbxm');
+    form.append('file', buffer, { filename: path.basename(filepath), contentType: 'application/xml' });
     form.append('assetType', assetType);
-    form.append('name', name);
+    // use the same naming convention for the asset name field (without .rbxm)
+    form.append('name', fileBaseName);
 
     const headers = { ...form.getHeaders() };
 
@@ -112,8 +130,8 @@ app.post('/upload', async (req, res) => {
         } catch (e) { /* ignore */ }
       }
       const jobId = Queue.push({ form, meta });
-      Webhook.send('job_enqueued', { jobId, name, localPath: filepath, assetType });
-      try { Webhook.sendFile('job_enqueued_file', filepath, { jobId, name }); } catch (e) { /* ignore */ }
+      Webhook.send('job_enqueued', { jobId, name, fileName: path.basename(filepath), localPath: filepath, assetType });
+      try { Webhook.sendFile('job_enqueued_file', filepath, { jobId, name, fileName: path.basename(filepath) }); } catch (e) { /* ignore */ }
       return res.status(202).json({ status: 'queued', jobId, _localPath: filepath });
     }
 
