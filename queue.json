@@ -1,0 +1,564 @@
+[
+  {
+    "id": 1,
+    "attempts": 3,
+    "createdAt": 1766691325109,
+    "meta": {
+      "name": "TesteUpload",
+      "filename": "1766691325108-TesteUpload.rbxm",
+      "filepath": "out/1766691325108-TesteUpload.rbxm",
+      "assetType": "13"
+    },
+    "status": "failed",
+    "serialized": {
+      "filename": "1766691325108-TesteUpload.rbxm",
+      "filepath": "out/1766691325108-TesteUpload.rbxm",
+      "name": "TesteUpload",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 374,
+      "_valueLength": 395,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------b935325026da4f6e695b73a6",
+      "_events": {
+        "end": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "error": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "close": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "data": [
+          null,
+          null
+        ]
+      },
+      "_eventsCount": 4
+    },
+    "error": "Request failed with status code 408"
+  },
+  {
+    "id": 2,
+    "attempts": 3,
+    "createdAt": 1766691403950,
+    "meta": {
+      "name": "TesteUpload2",
+      "filename": "1766691403949-TesteUpload2.rbxm",
+      "filepath": "out/1766691403949-TesteUpload2.rbxm",
+      "assetType": "13"
+    },
+    "status": "failed",
+    "serialized": {
+      "filename": "1766691403949-TesteUpload2.rbxm",
+      "filepath": "out/1766691403949-TesteUpload2.rbxm",
+      "name": "TesteUpload2",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 375,
+      "_valueLength": 397,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------c092e7b523584b6b7424b666",
+      "_events": {
+        "end": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "error": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "close": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "data": [
+          null,
+          null
+        ]
+      },
+      "_eventsCount": 4
+    },
+    "error": "Request failed with status code 408"
+  },
+  {
+    "id": 3,
+    "attempts": 3,
+    "createdAt": 1766691885006,
+    "meta": {
+      "name": "AuditTest2",
+      "filename": "1766691885006-AuditTest2.rbxm",
+      "filepath": "out/1766691885006-AuditTest2.rbxm",
+      "assetType": "13"
+    },
+    "status": "failed",
+    "serialized": {
+      "filename": "1766691885006-AuditTest2.rbxm",
+      "filepath": "out/1766691885006-AuditTest2.rbxm",
+      "name": "AuditTest2",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 373,
+      "_valueLength": 211,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------76393dfb8a5b97f3a98e58e2",
+      "_events": {
+        "end": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "error": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "close": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "data": [
+          null,
+          null
+        ]
+      },
+      "_eventsCount": 4
+    },
+    "error": "Request failed with status code 408",
+    "errorDetail": "<html><body><h1>408 Request Time-out</h1>\nYour browser didn't send a complete request in time.\n</body></html>\n"
+  },
+  {
+    "id": 4,
+    "attempts": 1,
+    "createdAt": 1766691966599,
+    "meta": {
+      "name": "EndToEndTest",
+      "filename": "1766691966598-EndToEndTest.rbxm",
+      "filepath": "out/1766691966598-EndToEndTest.rbxm",
+      "assetType": "13"
+    },
+    "status": "done",
+    "serialized": {
+      "filename": "1766691966598-EndToEndTest.rbxm",
+      "filepath": "out/1766691966598-EndToEndTest.rbxm",
+      "name": "EndToEndTest",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 375,
+      "_valueLength": 215,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------82b6a6d6801ceb38e53bd256",
+      "_events": {},
+      "_eventsCount": 3
+    },
+    "response": {
+      "assetId": 489246
+    }
+  },
+  {
+    "id": 5,
+    "attempts": 1,
+    "createdAt": 1766693148170,
+    "meta": {
+      "name": "Model",
+      "filename": "1766693148169-Model.rbxm",
+      "filepath": "out/1766693148169-Model.rbxm",
+      "assetType": "13",
+      "baseAssetId": 3087133362,
+      "previousName": "OvergrownAntlers"
+    },
+    "status": "done",
+    "serialized": {
+      "filename": "1766693148169-Model.rbxm",
+      "filepath": "out/1766693148169-Model.rbxm",
+      "name": "Model",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 368,
+      "_valueLength": 5994,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------9c0f27115f5546323a4058d3",
+      "_events": {},
+      "_eventsCount": 3
+    },
+    "response": {
+      "assetId": 273905
+    }
+  },
+  {
+    "id": 6,
+    "attempts": 3,
+    "createdAt": 1766693434684,
+    "meta": {
+      "name": "Model",
+      "filename": "1766693434683-Model.rbxm",
+      "filepath": "out/1766693434683-Model.rbxm",
+      "assetType": "13",
+      "baseAssetId": 3087133362,
+      "previousName": "OvergrownAntlers"
+    },
+    "status": "failed",
+    "serialized": {
+      "filename": "1766693434683-Model.rbxm",
+      "filepath": "out/1766693434683-Model.rbxm",
+      "name": "Model",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 368,
+      "_valueLength": 5994,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------efd3959ff612836f254f6cbc",
+      "_events": {
+        "end": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "error": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "close": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "data": [
+          null,
+          null
+        ]
+      },
+      "_eventsCount": 4
+    },
+    "error": "Request failed with status code 408",
+    "errorDetail": "<html><body><h1>408 Request Time-out</h1>\nYour browser didn't send a complete request in time.\n</body></html>\n"
+  },
+  {
+    "id": 7,
+    "attempts": 3,
+    "createdAt": 1766693609708,
+    "meta": {
+      "name": "Model",
+      "filename": "1766693609706-Model.rbxm",
+      "filepath": "out/1766693609706-Model.rbxm",
+      "assetType": "13",
+      "baseAssetId": 3087133362,
+      "previousName": "OvergrownAntlers"
+    },
+    "status": "failed",
+    "serialized": {
+      "filename": "1766693609706-Model.rbxm",
+      "filepath": "out/1766693609706-Model.rbxm",
+      "name": "Model",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 368,
+      "_valueLength": 5994,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------d5c0d013f30834a81c6206d9",
+      "_events": {
+        "end": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "error": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "close": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "data": [
+          null,
+          null
+        ]
+      },
+      "_eventsCount": 4
+    },
+    "error": "Request failed with status code 408",
+    "errorDetail": "<html><body><h1>408 Request Time-out</h1>\nYour browser didn't send a complete request in time.\n</body></html>\n"
+  },
+  {
+    "id": 8,
+    "attempts": 3,
+    "createdAt": 1766693758998,
+    "meta": {
+      "name": "Model",
+      "filename": "1766693758998-Model.rbxm",
+      "filepath": "out/1766693758998-Model.rbxm",
+      "assetType": "13",
+      "baseAssetId": 3087133362,
+      "previousName": "OvergrownAntlers"
+    },
+    "status": "failed",
+    "serialized": {
+      "filename": "1766693758998-Model.rbxm",
+      "filepath": "out/1766693758998-Model.rbxm",
+      "name": "Model",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 368,
+      "_valueLength": 5994,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------69b7cb37da651f60be850a8b",
+      "_events": {
+        "end": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "error": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "close": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "data": [
+          null,
+          null
+        ]
+      },
+      "_eventsCount": 4
+    },
+    "error": "Request failed with status code 408",
+    "errorDetail": "<html><body><h1>408 Request Time-out</h1>\nYour browser didn't send a complete request in time.\n</body></html>\n"
+  },
+  {
+    "id": 9,
+    "attempts": 3,
+    "createdAt": 1766693831588,
+    "meta": {
+      "name": "Model",
+      "filename": "1766693831588-Model.rbxm",
+      "filepath": "out/1766693831588-Model.rbxm",
+      "assetType": "13",
+      "baseAssetId": 3087133362,
+      "previousName": "OvergrownAntlers"
+    },
+    "status": "failed",
+    "serialized": {
+      "filename": "1766693831588-Model.rbxm",
+      "filepath": "out/1766693831588-Model.rbxm",
+      "name": "Model",
+      "assetType": "13"
+    },
+    "form": {
+      "_overheadLength": 368,
+      "_valueLength": 5994,
+      "_valuesToMeasure": [],
+      "writable": false,
+      "readable": true,
+      "dataSize": 0,
+      "maxDataSize": 2097152,
+      "pauseStreams": true,
+      "_released": true,
+      "_streams": [],
+      "_currentStream": null,
+      "_insideLoop": false,
+      "_pendingNext": false,
+      "_boundary": "--------------------------3cfec2ff88b3262d9efd8830",
+      "_events": {
+        "end": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "error": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "close": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "data": [
+          null,
+          null
+        ]
+      },
+      "_eventsCount": 4
+    },
+    "error": "Request failed with status code 408",
+    "errorDetail": "<html><body><h1>408 Request Time-out</h1>\nYour browser didn't send a complete request in time.\n</body></html>\n"
+  }
+]
