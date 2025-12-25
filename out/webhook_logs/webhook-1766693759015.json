@@ -1,0 +1,19 @@
+{
+  "headers": {
+    "accept": "application/json, text/plain, */*",
+    "content-type": "multipart/form-data; boundary=--------------------------bc1a2ea389bf7db876b20aa0",
+    "user-agent": "axios/1.13.2",
+    "content-length": "6547",
+    "accept-encoding": "gzip, compress, deflate, br",
+    "host": "localhost:5000",
+    "connection": "keep-alive"
+  },
+  "body": {
+    "payload_json": "{\"embeds\":[{\"title\":\"Bridge Event: job_enqueued_file\",\"color\":3066993,\"fields\":[{\"name\":\"jobId\",\"value\":\"8\",\"inline\":false},{\"name\":\"name\",\"value\":\"Model\",\"inline\":false}],\"timestamp\":\"2025-12-25T20:15:59.002Z\"}]}"
+  },
+  "file": {
+    "originalname": "1766693758998-Model.rbxm",
+    "path": "out/webhook_uploads/bc684c3a509bd47086d616a150d255b4",
+    "size": 5987
+  }
+}

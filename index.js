@@ -49,7 +49,17 @@ app.post('/upload', async (req, res) => {
       try {
         const baseUrl = `${ASSET_DELIVERY_URL}${encodeURIComponent(payload.baseAssetId)}`;
         const headers = {};
-        if (process.env.ROBLOX_BEARER) headers['Authorization'] = `Bearer ${process.env.ROBLOX_BEARER}`;
+        if (process.env.ROBLOX_BEARER) {
+          let bearer = process.env.ROBLOX_BEARER.trim();
+          if ((bearer.startsWith('"') && bearer.endsWith('"')) || (bearer.startsWith("'") && bearer.endsWith("'"))) {
+            bearer = bearer.slice(1, -1);
+          }
+          if (bearer.startsWith('RBX-')) {
+            headers['x-api-key'] = bearer;
+          } else {
+            headers['Authorization'] = `Bearer ${bearer}`;
+          }
+        }
         const resp = await axios.get(baseUrl, { responseType: 'arraybuffer', headers });
         rbxmXml = Buffer.from(resp.data).toString('utf8');
         Webhook.send('base_asset_downloaded', { baseAssetId: payload.baseAssetId, size: resp.data.length });
@@ -102,10 +112,23 @@ app.post('/upload', async (req, res) => {
     const headers = { ...form.getHeaders() };
 
     if (process.env.ROBLOX_BEARER) {
-      headers['Authorization'] = `Bearer ${process.env.ROBLOX_BEARER}`;
+      let bearer = process.env.ROBLOX_BEARER.trim();
+      if ((bearer.startsWith('"') && bearer.endsWith('"')) || (bearer.startsWith("'") && bearer.endsWith("'"))) {
+        bearer = bearer.slice(1, -1);
+      }
+      // RBX-* tokens are API keys, not Bearer tokens; use x-api-key header
+      if (bearer.startsWith('RBX-')) {
+        headers['x-api-key'] = bearer;
+      } else {
+        headers['Authorization'] = `Bearer ${bearer}`;
+      }
     }
     if (process.env.ROBLOX_API_KEY) {
-      headers['x-api-key'] = process.env.ROBLOX_API_KEY;
+      let key = process.env.ROBLOX_API_KEY.trim();
+      if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+        key = key.slice(1, -1);
+      }
+      headers['x-api-key'] = key;
     }
 
     // If dry run requested, return the generated .rbxm and skip upload
@@ -115,6 +138,23 @@ app.post('/upload', async (req, res) => {
       res.setHeader('Content-Type', 'application/xml');
       res.setHeader('X-RBXM-FILEPATH', filepath);
       return res.send(rbxmXml);
+    }
+
+    // If mock mode requested (for testing without real credentials)
+    if (String(req.query.mock).toLowerCase() === 'true') {
+      const mockAssetId = Math.floor(Math.random() * 1000000) + 100000;
+      const mockResponse = { assetId: mockAssetId, operationId: `mock-${Date.now()}` };
+      const jobId = Queue.push({ form: {}, meta: { name, filename, filepath, assetType, baseAssetId: payload.baseAssetId, previousName: null, isMock: true } });
+      // immediately mark as done (mock)
+      const job = Queue.get(jobId);
+      if (job) {
+        job.status = 'done';
+        job.response = mockResponse;
+        job.assetId = mockAssetId;
+        try { Webhook.send('job_succeeded', { jobId, name, assetId: mockAssetId, isMock: true }); } catch (e) {}
+      }
+      Queue._save();
+      return res.status(200).json({ status: 'mocked', jobId, assetId: mockAssetId, _localPath: filepath });
     }
 
     // If not dry, push job to queue for upload (async retries)
@@ -152,6 +192,33 @@ app.post('/upload', async (req, res) => {
 });
 
 app.get('/', (req, res) => res.send('Roblox Assets Bridge is running'));
+
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    const bearer = (process.env.ROBLOX_BEARER || '').trim();
+    const apiKey = (process.env.ROBLOX_API_KEY || '').trim();
+    const assetUrl = process.env.ASSETS_API_URL || 'https://apis.roblox.com/assets/v1/assets';
+    
+    const health = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      queue: Queue.list(),
+      credentials: {
+        bearer: bearer ? '***' + bearer.slice(-10) : 'not set',
+        apiKey: apiKey ? '***' + apiKey.slice(-10) : 'not set'
+      },
+      config: {
+        outDir: process.env.OUT_DIR || './out',
+        assetsApiUrl: assetUrl,
+        autoPublish: process.env.AUTO_PUBLISH === 'true'
+      }
+    };
+    res.json(health);
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
 
 // Queue inspection endpoints
 app.get('/queue', (req, res) => {

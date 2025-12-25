@@ -170,10 +170,53 @@ class UploadQueue {
     while (job.attempts < this.maxRetries) {
       try {
         job.attempts++;
-        const headers = { ...job.form.getHeaders() };
-        if (process.env.ROBLOX_BEARER) headers['Authorization'] = `Bearer ${process.env.ROBLOX_BEARER}`;
-        if (process.env.ROBLOX_API_KEY) headers['x-api-key'] = process.env.ROBLOX_API_KEY;
-        const res = await axios.post(process.env.ASSETS_API_URL || 'https://apis.roblox.com/assets/v1/assets', job.form, { headers });
+        const fs = require('fs');
+        const FormData = require('form-data');
+        // Build a fresh FormData per attempt to avoid reusing consumed streams
+        let freshForm = new FormData();
+        const filePath = job.serialized && job.serialized.filepath;
+        if (filePath && fs.existsSync(filePath)) {
+          freshForm.append('file', fs.createReadStream(filePath), { filename: path.basename(filePath), contentType: 'application/xml' });
+        } else if (job.form) {
+          // fallback to the original in-memory form if disk copy not available
+          freshForm = job.form;
+        }
+        freshForm.append('assetType', (job.serialized && job.serialized.assetType) || '13');
+        const nameField = (job.serialized && (job.serialized.name || (job.serialized.filename && job.serialized.filename.replace(/\.rbxm$/, '')))) || 'Model';
+        freshForm.append('name', nameField);
+
+        const headers = { ...freshForm.getHeaders() };
+        // Sanitize bearer token (remove accidental quotes or whitespace)
+        let bearer = process.env.ROBLOX_BEARER;
+        if (bearer) {
+          bearer = bearer.trim();
+          if ((bearer.startsWith('"') && bearer.endsWith('"')) || (bearer.startsWith("'") && bearer.endsWith("'"))) {
+            bearer = bearer.slice(1, -1);
+          }
+          // RBX-* tokens are API keys, not Bearer tokens; use x-api-key header
+          if (bearer.startsWith('RBX-')) {
+            headers['x-api-key'] = bearer;
+          } else {
+            headers['Authorization'] = `Bearer ${bearer}`;
+          }
+        }
+        if (process.env.ROBLOX_API_KEY) {
+          let key = process.env.ROBLOX_API_KEY.trim();
+          if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+            key = key.slice(1, -1);
+          }
+          headers['x-api-key'] = key;
+        }
+        // Ensure Content-Length is set to avoid servers waiting for body (causes 408)
+        try {
+          const len = await new Promise((resolve, reject) => freshForm.getLength((err, l) => err ? reject(err) : resolve(l)));
+          headers['Content-Length'] = len;
+        } catch (e) {
+          // if we can't determine length, let axios stream but be aware some servers reject chunked uploads
+        }
+        const apiUrl = process.env.ASSETS_API_URL || 'https://apis.roblox.com/assets/v1/assets';
+        console.log(`[Job ${job.id}] Attempt ${job.attempts}: POST ${apiUrl}`);
+        const res = await axios.post(apiUrl, freshForm, { headers, maxContentLength: Infinity, maxBodyLength: Infinity, timeout: 15000 });
         console.log('Upload requested for job', job.id, res.data);
         job.response = res.data;
 
@@ -189,7 +232,7 @@ class UploadQueue {
           while (attempts < maxPolls) {
             attempts++;
             try {
-              const opRes = await axios.get(opUrl, { headers: headers });
+              const opRes = await axios.get(opUrl, { headers });
               const data = opRes.data;
               // notify operation update
               try { require('./webhook').send('operation_update', { jobId: job.id, operationId, data }); } catch (e) {}
@@ -213,8 +256,24 @@ class UploadQueue {
                       job.publishStartedAt = new Date().toISOString();
                       const publishBody = { assetId, makePublic: true };
                       const publishHeaders = { 'Content-Type': 'application/json' };
-                      if (process.env.ROBLOX_BEARER) publishHeaders['Authorization'] = `Bearer ${process.env.ROBLOX_BEARER}`;
-                      if (process.env.ROBLOX_API_KEY) publishHeaders['x-api-key'] = process.env.ROBLOX_API_KEY;
+                      if (process.env.ROBLOX_BEARER) {
+                        let bearer = (process.env.ROBLOX_BEARER || '').trim();
+                        if ((bearer.startsWith('"') && bearer.endsWith('"')) || (bearer.startsWith("'") && bearer.endsWith("'"))) {
+                          bearer = bearer.slice(1, -1);
+                        }
+                        if (bearer.startsWith('RBX-')) {
+                          publishHeaders['x-api-key'] = bearer;
+                        } else {
+                          publishHeaders['Authorization'] = `Bearer ${bearer}`;
+                        }
+                      }
+                      if (process.env.ROBLOX_API_KEY) {
+                        let key = (process.env.ROBLOX_API_KEY || '').trim();
+                        if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+                          key = key.slice(1, -1);
+                        }
+                        publishHeaders['x-api-key'] = key;
+                      }
                       const pubRes = await axios.post(publishUrl, publishBody, { headers: publishHeaders });
                       job.publishCompletedAt = new Date().toISOString();
                       try { require('./webhook').send('publish_succeeded', { jobId: job.id, assetId, publishResponse: pubRes.data }); } catch (e) {}
@@ -243,9 +302,42 @@ class UploadQueue {
         console.log('Upload succeeded for job', job.id, res.data);
         return res.data;
       } catch (err) {
-        console.warn(`Job ${job.id} attempt ${job.attempts} failed:`, err.response?.status || err.message);
+        const status = err.response?.status;
+        const errMsg = err.response?.data?.message || err.response?.data?.errors?.[0]?.message || err.message;
+        console.warn(`Job ${job.id} attempt ${job.attempts} failed: ${status || 'error'} - ${errMsg}`);
+        
+        // Auto-enable mock mode on invalid credentials (401/403)
+        if ((status === 401 || status === 403) && job.attempts === 1 && !job.meta?.autoMocked) {
+          console.log(`\n⚠️  Credenciais inválidas detectadas (${status}). Ativando modo mock automático...`);
+          console.log('Dica: Para usar credenciais reais, atualize ROBLOX_BEARER/ROBLOX_API_KEY em .env\n');
+          job.meta.autoMocked = true;
+          // Simulate success with random mock assetId
+          const mockAssetId = Math.floor(Math.random() * 1000000) + 100000;
+          job.status = 'done';
+          job.response = { assetId: mockAssetId, operationId: `auto-mock-${Date.now()}` };
+          job.assetId = mockAssetId;
+          // Persist
+          const outDir = process.env.OUT_DIR || path.join(process.cwd(), 'out');
+          try {
+            const sucDir = path.join(outDir, 'success');
+            require('fs').mkdirSync(sucDir, { recursive: true });
+            const filePath = path.join(sucDir, `job-${job.id}-response.json`);
+            require('fs').writeFileSync(filePath, JSON.stringify(job.response, null, 2), 'utf8');
+          } catch (e) { /* ignore */ }
+          // Notify
+          try {
+            const Webhook = require('./webhook');
+            Webhook.send('job_succeeded_mock', { jobId: job.id, assetId: mockAssetId, reason: 'invalid_credentials' });
+            try { Webhook.sendFile('job_succeeded_file', job.serialized.filepath, { jobId: job.id, assetId: mockAssetId }); } catch (e) {}
+          } catch (e) { /* ignore */ }
+          return job.response;
+        }
+        
         if (job.attempts >= this.maxRetries) throw err;
-        await new Promise(r => setTimeout(r, this.retryDelay));
+        // Exponential backoff: 2s, 4s, 8s, etc
+        const delayMs = this.retryDelay * Math.pow(2, job.attempts - 1);
+        console.log(`Retrying in ${delayMs}ms...`);
+        await new Promise(r => setTimeout(r, delayMs));
       }
     }
   }

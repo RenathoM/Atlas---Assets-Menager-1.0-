@@ -30,8 +30,24 @@ async function main() {
     const url = publishUrl.replace('{assetId}', encodeURIComponent(assetId));
     const body = { makePublic: Boolean(argv.makePublic), assetId };
     const headers = { 'Content-Type': 'application/json' };
-    if (process.env.ROBLOX_BEARER) headers['Authorization'] = `Bearer ${process.env.ROBLOX_BEARER}`;
-    if (process.env.ROBLOX_API_KEY) headers['x-api-key'] = process.env.ROBLOX_API_KEY;
+    if (process.env.ROBLOX_BEARER) {
+      let bearer = (process.env.ROBLOX_BEARER || '').trim();
+      if ((bearer.startsWith('"') && bearer.endsWith('"')) || (bearer.startsWith("'") && bearer.endsWith("'"))) {
+        bearer = bearer.slice(1, -1);
+      }
+      if (bearer.startsWith('RBX-')) {
+        headers['x-api-key'] = bearer;
+      } else {
+        headers['Authorization'] = `Bearer ${bearer}`;
+      }
+    }
+    if (process.env.ROBLOX_API_KEY) {
+      let key = (process.env.ROBLOX_API_KEY || '').trim();
+      if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+        key = key.slice(1, -1);
+      }
+      headers['x-api-key'] = key;
+    }
 
     console.log('Enviando publicação para', url);
     const res = await axios.post(url, body, { headers });
