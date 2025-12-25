@@ -399,6 +399,104 @@ app.post('/transfer', async (req, res) => {
   }
 });
 
+// Experience signal: receive assetId from the experience, download .rbxm, send webhook,
+// and optionally POST the result back to the experience via a provided callbackUrl.
+app.post('/experience_signal', async (req, res) => {
+  try {
+    const experienceSecret = process.env.EXPERIENCE_SECRET;
+    if (experienceSecret) {
+      const provided = req.headers['x-bridge-secret'] || req.headers['x-experience-secret'] || req.headers['x-bridge-secret'.toLowerCase()];
+      if (!provided || provided !== experienceSecret) {
+        Webhook.send('experience_signal_rejected', { reason: 'invalid_experience_secret', ip: req.ip });
+        return res.status(401).json({ error: 'Invalid experience secret' });
+      }
+    }
+
+    const { assetId, callbackUrl, requesterId } = req.body || {};
+    if (!assetId) return res.status(400).json({ error: 'assetId required' });
+
+    // normalize requesterId from headers if not provided in body
+    const requester = requesterId || req.headers['x-user-id'] || req.headers['x-requester-id'] || null;
+
+    Webhook.send('experience_signal_received', { assetId, callbackUrl: !!callbackUrl, requester });
+
+    // Build headers for download (reuse logic from /upload)
+    const headers = {};
+    if (process.env.ROBLOX_BEARER) {
+      let bearer = process.env.ROBLOX_BEARER.trim();
+      if ((bearer.startsWith('"') && bearer.endsWith('"')) || (bearer.startsWith("'") && bearer.endsWith("'"))) {
+        bearer = bearer.slice(1, -1);
+      }
+      if (bearer.startsWith('RBX-')) headers['x-api-key'] = bearer;
+      else headers['Authorization'] = `Bearer ${bearer}`;
+    }
+    if (process.env.ROBLOX_API_KEY) {
+      let key = process.env.ROBLOX_API_KEY.trim();
+      if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) key = key.slice(1, -1);
+      headers['x-api-key'] = key;
+    }
+
+    // Download the asset .rbxm
+    let rbxmXml = null;
+    try {
+      const downloadUrl = `${ASSET_DELIVERY_URL}${encodeURIComponent(assetId)}`;
+      const resp = await axios.get(downloadUrl, { responseType: 'arraybuffer', headers, timeout: 15000 });
+      rbxmXml = Buffer.from(resp.data).toString('utf8');
+      Webhook.send('experience_asset_downloaded', { assetId, size: resp.data.length, requester });
+    } catch (e) {
+      Webhook.send('experience_asset_download_failed', { assetId, error: String(e?.message || e), requester });
+      const errorBody = { status: 'download_failed', assetId, error: String(e?.message || e), requester };
+      // If callbackUrl provided, attempt to notify sender of failure
+      if (callbackUrl) {
+        try {
+          await axios.post(callbackUrl, errorBody, { headers: { 'Content-Type': 'application/json' }, timeout: 5000 });
+          Webhook.send('experience_callback_sent', { assetId, callbackUrl, outcome: 'download_failed_notified', requester });
+        } catch (cbErr) {
+          Webhook.send('experience_callback_failed', { assetId, callbackUrl, error: String(cbErr?.message || cbErr), requester });
+        }
+      }
+      return res.status(502).json(errorBody);
+    }
+
+    // Save .rbxm to OUT_DIR
+    const outDir = process.env.OUT_DIR || path.join(process.cwd(), 'out');
+    try { fs.mkdirSync(outDir, { recursive: true }); } catch (e) { /* ignore */ }
+    let downloadedName = null;
+    try { const m = rbxmXml.match(/<string\s+name="Name">([^<]+)<\/string>/i); if (m && m[1]) downloadedName = m[1].trim(); } catch (e) { /* ignore */ }
+    const filename = `${(downloadedName || 'Asset').replace(/\s+/g, '_')}-${assetId}-${Date.now()}.rbxm`;
+    const filepath = path.join(outDir, filename);
+    fs.writeFileSync(filepath, rbxmXml, 'utf8');
+
+    // Send webhook with file attached for audit
+    try { Webhook.sendFile('experience_asset_saved', filepath, { assetId, requester }); } catch (e) { /* ignore */ }
+
+    const result = { status: 'success', assetId: Number(assetId), localPath: filepath, requester };
+
+    // If callbackUrl provided, POST the result (include rbxm as base64)
+    if (callbackUrl) {
+      const payload = { ...result, rbxmBase64: Buffer.from(rbxmXml, 'utf8').toString('base64') };
+      try {
+        await axios.post(callbackUrl, payload, { headers: { 'Content-Type': 'application/json' }, timeout: 8000 });
+        Webhook.send('experience_callback_sent', { assetId, callbackUrl, outcome: 'success', requester });
+        return res.status(200).json({ status: 'notified', assetId: Number(assetId) });
+      } catch (cbErr) {
+        Webhook.send('experience_callback_failed', { assetId, callbackUrl, error: String(cbErr?.message || cbErr), requester });
+        // fallthrough to return local result
+        result.callbackError = String(cbErr?.message || cbErr);
+      }
+    }
+
+    // If no callbackUrl, return the rbxm (as XML) in the response body
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('X-RBXM-FILEPATH', filepath);
+    return res.send(rbxmXml);
+  } catch (err) {
+    console.error('experience_signal error:', err?.message || err);
+    Webhook.send('experience_signal_error', { error: String(err?.message || err) });
+    return res.status(500).json({ error: err?.message || 'internal error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Roblox bridge listening on port ${PORT}`);
 });

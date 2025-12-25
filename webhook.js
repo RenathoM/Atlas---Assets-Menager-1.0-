@@ -9,6 +9,8 @@ function truncate(str, n = 1000) {
   return str.length > n ? str.slice(0, n) + `...(${str.length - n} more chars)` : str;
 }
 
+const FOOTER_TEXT = '# ======= End of Request =======';
+
 async function send(event, details = {}) {
   const webhook = process.env.DISCORD_WEBHOOK_URL || DEFAULT_WEBHOOK;
   if (!webhook) return;
@@ -30,6 +32,7 @@ async function send(event, details = {}) {
         color: 3066993,
         fields,
         timestamp: new Date().toISOString(),
+        footer: { text: FOOTER_TEXT }
       },
     ],
   };
@@ -61,6 +64,7 @@ async function sendFile(event, filePath, details = {}) {
           color: 3066993,
           fields,
           timestamp: new Date().toISOString(),
+          footer: { text: FOOTER_TEXT }
         },
       ],
     };

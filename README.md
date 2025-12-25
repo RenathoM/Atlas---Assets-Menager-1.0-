@@ -20,6 +20,7 @@ npm install
 | `PORT` | Porta do servidor | `3000` |
 | `OUT_DIR` | Diretório para salvar `.rbxm` gerados | `./out` |
 | `EXPERIENCE_SECRET` | Segredo compartilhado com a experiência Roblox | — |
+| `EXPERIENCE_ID` | ID da experiência Roblox (opcional, usado para validação/exibição) | `94319257727040` |
 | `DISCORD_WEBHOOK_URL` | Webhook para notificações | — |
 | `AUTO_PUBLISH` | Publicar asset automaticamente após upload | `false` |
 
@@ -196,7 +197,8 @@ local function uploadModel()
     Method = "POST",
     Headers = {
       ["Content-Type"] = "application/json",
-      ["x-bridge-secret"] = "SEU_EXPERIENCE_SECRET"
+      ["x-bridge-secret"] = "SEU_EXPERIENCE_SECRET",
+      ["x-experience-id"] = "94319257727040" -- (opcional) enviar o ID da experiência
     },
     Body = HttpService:JSONEncode(payload)
   })
@@ -211,6 +213,46 @@ end
 
 uploadModel()
 ```
+
+## Receber sinal da experiência (asset callback)
+
+Se sua experiência precisa notificar o bridge informando apenas um `assetId`, use o endpoint `/experience_signal`.
+
+Exemplo de chamada da experiência (Server Script):
+
+```lua
+local HttpService = game:GetService("HttpService")
+
+local payload = {
+  assetId = 3087133362,
+  callbackUrl = "https://your-experience-endpoint/receive-asset-response" -- opcional
+}
+
+local response = HttpService:RequestAsync({
+  Url = "https://seu-bridge-url/experience_signal",
+  Method = "POST",
+  Headers = {
+    ["Content-Type"] = "application/json",
+    ["x-bridge-secret"] = "SEU_EXPERIENCE_SECRET",
+    ["x-experience-id"] = "94319257727040"
+  },
+  Body = HttpService:JSONEncode(payload)
+})
+
+if response.Success then
+  print("Bridge response:", response.Body)
+else
+  warn("Erro ao notificar bridge:", response.StatusCode, response.Body)
+end
+```
+
+Comportamento do bridge:
+
+- Baixa o `.rbxm` do `assetId` informado (usando `ASSET_DELIVERY_URL`).
+- Salva o `.rbxm` em `OUT_DIR` e anexa o arquivo ao webhook (`experience_asset_saved`).
+- Se `callbackUrl` for fornecido, o bridge fará um `POST` para essa URL com JSON contendo `assetId`, `localPath` e `rbxmBase64` (conteúdo do arquivo codificado em base64).
+- Se `callbackUrl` não for informado, o bridge responde diretamente com o conteúdo `.rbxm` (Content-Type: `application/xml`).
+
 
 ## Health Check
 
