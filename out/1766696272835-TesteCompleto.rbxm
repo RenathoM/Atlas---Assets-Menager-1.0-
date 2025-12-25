@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<roblox version="4">
+  <Item class="Model" referent="RBX0">
+    <Properties>
+      <string name="Name">ModeloTeste</string>
+    </Properties>
+  </Item>
+</roblox>

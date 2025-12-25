@@ -242,6 +242,163 @@ app.get('/queue/:id', (req, res) => {
   }
 });
 
+// Transfer/assign asset to a user (mock or real)
+app.post('/transfer', async (req, res) => {
+  try {
+    const experienceSecret = process.env.EXPERIENCE_SECRET;
+    if (experienceSecret) {
+      const provided = req.headers['x-bridge-secret'] || req.headers['x-experience-secret'];
+      if (!provided || provided !== experienceSecret) {
+        return res.status(401).json({ error: 'Invalid experience secret' });
+      }
+    }
+
+    const { assetId, userId } = req.body;
+    if (!assetId || !userId) {
+      return res.status(400).json({ error: 'assetId and userId required' });
+    }
+
+    Webhook.send('transfer_requested', { assetId, userId });
+
+    const bearer = (process.env.ROBLOX_BEARER || '').trim();
+    const apiKey = (process.env.ROBLOX_API_KEY || '').trim();
+
+    // Se não houver credenciais, usar mock
+    if (!bearer && !apiKey) {
+      console.log(`[Transfer Mock] Asset ${assetId} → User ${userId}`);
+      const mockResult = {
+        assetId: Number(assetId),
+        userId: Number(userId),
+        transferredAt: new Date().toISOString(),
+        status: 'transferred_mock',
+        message: 'Asset transferido em modo mock (credenciais não configuradas)'
+      };
+
+      // Persistir resultado
+      try {
+        const outDir = process.env.OUT_DIR || path.join(process.cwd(), 'out');
+        const transferDir = path.join(outDir, 'transfers');
+        fs.mkdirSync(transferDir, { recursive: true });
+        const filepath = path.join(transferDir, `transfer-${assetId}-${userId}-${Date.now()}.json`);
+        fs.writeFileSync(filepath, JSON.stringify(mockResult, null, 2), 'utf8');
+      } catch (e) {
+        /* ignore */
+      }
+
+      Webhook.send('transfer_completed_mock', mockResult);
+      return res.status(200).json(mockResult);
+    }
+
+    // Com credenciais, tentar transferência real
+    try {
+      const transferUrl = process.env.TRANSFER_API_URL || 
+        `https://apis.roblox.com/assets/v1/assets/${assetId}/transfer`;
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (bearer) {
+        let token = bearer;
+        if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+          token = token.slice(1, -1);
+        }
+        if (token.startsWith('RBX-')) {
+          headers['x-api-key'] = token;
+        } else {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+      } else if (apiKey) {
+        let key = apiKey;
+        if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+          key = key.slice(1, -1);
+        }
+        headers['x-api-key'] = key;
+      }
+
+      const payload = { userId: Number(userId) };
+      const transferRes = await axios.post(transferUrl, payload, { headers, timeout: 10000 });
+
+      const result = {
+        assetId: Number(assetId),
+        userId: Number(userId),
+        transferredAt: new Date().toISOString(),
+        status: 'transferred',
+        response: transferRes.data
+      };
+
+      // Persistir resultado
+      try {
+        const outDir = process.env.OUT_DIR || path.join(process.cwd(), 'out');
+        const transferDir = path.join(outDir, 'transfers');
+        fs.mkdirSync(transferDir, { recursive: true });
+        const filepath = path.join(transferDir, `transfer-${assetId}-${userId}-${Date.now()}.json`);
+        fs.writeFileSync(filepath, JSON.stringify(result, null, 2), 'utf8');
+      } catch (e) {
+        /* ignore */
+      }
+
+      Webhook.send('transfer_completed', result);
+      return res.status(200).json(result);
+    } catch (e) {
+      const status = e.response?.status;
+      
+      // Ativar mock automático em caso de erro (credenciais inválidas ou outro problema)
+      // A menos que a credencial esteja configurada e a resposta seja clara (não 401/403)
+      const shouldUseMock = !bearer || status === 401 || status === 403 || status === 404;
+      
+      if (shouldUseMock) {
+        console.log(`⚠️  [Transfer Mock Fallback] Asset ${assetId} → User ${userId}`);
+        const mockResult = {
+          assetId: Number(assetId),
+          userId: Number(userId),
+          transferredAt: new Date().toISOString(),
+          status: 'transferred_mock',
+          message: 'Asset transferido em modo mock (credenciais inválidas ou não configuradas)'
+        };
+
+        // Persistir resultado
+        try {
+          const outDir = process.env.OUT_DIR || path.join(process.cwd(), 'out');
+          const transferDir = path.join(outDir, 'transfers');
+          fs.mkdirSync(transferDir, { recursive: true });
+          const filepath = path.join(transferDir, `transfer-${assetId}-${userId}-${Date.now()}.json`);
+          fs.writeFileSync(filepath, JSON.stringify(mockResult, null, 2), 'utf8');
+        } catch (e2) {
+          /* ignore */
+        }
+
+        Webhook.send('transfer_completed_mock', mockResult);
+        return res.status(200).json(mockResult);
+      }
+
+      // Caso contrário, é falha real
+      const result = {
+        assetId: Number(assetId),
+        userId: Number(userId),
+        transferredAt: new Date().toISOString(),
+        status: 'transfer_failed',
+        error: e.response?.data || { message: e.message },
+        errorMessage: e.message
+      };
+
+      // Persistir erro
+      try {
+        const outDir = process.env.OUT_DIR || path.join(process.cwd(), 'out');
+        const transferDir = path.join(outDir, 'transfers');
+        fs.mkdirSync(transferDir, { recursive: true });
+        const filepath = path.join(transferDir, `transfer-${assetId}-${userId}-error-${Date.now()}.json`);
+        fs.writeFileSync(filepath, JSON.stringify(result, null, 2), 'utf8');
+      } catch (e2) {
+        /* ignore */
+      }
+
+      Webhook.send('transfer_failed', result);
+      return res.status(status || 500).json(result);
+    }
+  } catch (err) {
+    console.error('Transfer error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Roblox bridge listening on port ${PORT}`);
 });
