@@ -13,7 +13,11 @@ const FOOTER_TEXT = '# ======= End of Request =======';
 
 async function send(event, details = {}) {
   const webhook = process.env.DISCORD_WEBHOOK_URL || DEFAULT_WEBHOOK;
-  if (!webhook) return;
+  // Always attempt to send webhook; fallback to console if URL unavailable
+  if (!webhook) {
+    console.log(`[WEBHOOK FALLBACK] ${event}:`, details);
+    return;
+  }
 
   const title = `Bridge Event: ${event}`;
   const fields = [];
@@ -46,7 +50,11 @@ async function send(event, details = {}) {
 
 async function sendFile(event, filePath, details = {}) {
   const webhook = process.env.DISCORD_WEBHOOK_URL || DEFAULT_WEBHOOK;
-  if (!webhook) return;
+  // Always attempt to send webhook; fallback to console if URL unavailable
+  if (!webhook) {
+    console.log(`[WEBHOOK FALLBACK] ${event}:`, details);
+    return;
+  }
   if (!filePath) return send(event, details);
   try {
     const fields = [];
