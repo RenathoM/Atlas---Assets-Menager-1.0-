@@ -1,0 +1,19 @@
+{
+  "headers": {
+    "accept": "application/json, text/plain, */*",
+    "content-type": "multipart/form-data; boundary=--------------------------99b2c77918d4ab430b95a965",
+    "user-agent": "axios/1.13.2",
+    "content-length": "788",
+    "accept-encoding": "gzip, compress, deflate, br",
+    "host": "localhost:5000",
+    "connection": "keep-alive"
+  },
+  "body": {
+    "payload_json": "{\"embeds\":[{\"title\":\"Bridge Event: job_succeeded_file\",\"color\":3066993,\"fields\":[{\"name\":\"jobId\",\"value\":\"4\",\"inline\":false},{\"name\":\"response\",\"value\":\"{\\\"assetId\\\":489246}\",\"inline\":false}],\"timestamp\":\"2025-12-25T19:46:06.632Z\"}]}"
+  },
+  "file": {
+    "originalname": "1766691966598-EndToEndTest.rbxm",
+    "path": "out/webhook_uploads/e4b74904974ba9481e52c492e2e39760",
+    "size": 201
+  }
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<roblox version="4">
+  <Item class="Model" referent="RBX0">
+    <Properties>
+      <string name="Name">TesteUpload2</string>
+    </Properties>
+    <Item class="Part" referent="RBX1">
+      <Properties>
+        <string name="Name">P1</string>
+        <Vector3 name="Position">0, 5, 0</Vector3>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>

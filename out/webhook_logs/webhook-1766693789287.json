@@ -1,0 +1,19 @@
+{
+  "headers": {
+    "accept": "application/json, text/plain, */*",
+    "content-type": "multipart/form-data; boundary=--------------------------25f38b2aeb151e4dfc5c29b1",
+    "user-agent": "axios/1.13.2",
+    "content-length": "6738",
+    "accept-encoding": "gzip, compress, deflate, br",
+    "host": "localhost:5000",
+    "connection": "keep-alive"
+  },
+  "body": {
+    "payload_json": "{\"embeds\":[{\"title\":\"Bridge Event: job_failed_file\",\"color\":3066993,\"fields\":[{\"name\":\"jobId\",\"value\":\"8\",\"inline\":false},{\"name\":\"error\",\"value\":\"Request failed with status code 408\",\"inline\":false},{\"name\":\"errorDetail\",\"value\":\"<html><body><h1>408 Request Time-out</h1>\\nYour browser didn't send a complete request in time.\\n</body></html>\\n\",\"inline\":false}],\"timestamp\":\"2025-12-25T20:16:29.281Z\"}]}"
+  },
+  "file": {
+    "originalname": "1766693758998-Model.rbxm",
+    "path": "out/webhook_uploads/22b6ddb01122c1f86ff1c2de2476a448",
+    "size": 5987
+  }
+}

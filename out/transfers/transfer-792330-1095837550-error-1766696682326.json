@@ -1,0 +1,15 @@
+{
+  "assetId": 792330,
+  "userId": 1095837550,
+  "transferredAt": "2025-12-25T21:04:42.326Z",
+  "status": "transfer_failed",
+  "error": {
+    "errors": [
+      {
+        "code": 0,
+        "message": ""
+      }
+    ]
+  },
+  "errorMessage": "Request failed with status code 404"
+}
